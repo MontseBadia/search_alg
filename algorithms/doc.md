@@ -22,7 +22,7 @@ Stopping at a goal or exploring everywhere. It makes little sense for A* or gree
 
 You can return: node, a map with the distance to every node, a spanning tree, a boolean, etc.
 
-#### Direction (forwdard vs reversed edges)
+#### Direction (forward vs reversed edges)
 
 Follow edges outward or backward. Irrelevant on undirected ones.
 
@@ -89,3 +89,18 @@ DFS family specific
 
 Beam-search specific.
 
+#### Variable ordering (arbitrary vs MRV)
+
+CSP specific. Which variable to assign next. MRV (minimum remaining value) picks smallest domain.
+
+#### Value ordering (arbitrary vs LCV)
+
+CSP specific. Which value to try first, once the variable is chosen. LCV (least constraining value) prefers the value that removes fewest options from the peers.
+
+#### Propagation strength (none / forward checking / arc consistency / global)
+
+CSP specific. How much to do after each assignment: none, forward checking (erase the assigned value from peer's domain), arc consistency (keep going while pruning creates more singletons), global constraint (review the whole group at once).
+
+#### Constraint arity / encoding (binary vs n-ary)
+
+CSP specific. Arity = how many variables one constraint touches. Sudoku is naturally n-ary but can be re-encoded as pairwise ≠ between every pair. Binary is simpler and is what AC-3 expects.
