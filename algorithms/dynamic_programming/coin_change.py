@@ -43,6 +43,7 @@ loop_count = 0
 #         └─ coin 4 → change(-2) ✗
 
 def coin_change_brute_force(coins, amount):
+    if amount == 0: return 0
     if not coins: return -1
 
     def best(rem):
@@ -62,6 +63,7 @@ def coin_change_brute_force(coins, amount):
 
 # -- Memoizing --
 def coin_change_memoizing(coins, amount):
+    if amount == 0: return 0
     if not coins: return -1
 
     def best(rem, memory):
@@ -118,6 +120,7 @@ if __name__ == "__main__":
         ([2], 3, -1),
         ([1], 0, 0),
         ([], 5, -1),
+        ([], 0, 0),
         ([1, 5, 10, 25], 63, 6),
     ]
 

@@ -2,6 +2,13 @@
 # KNAPSACK - DYNAMIC PROGRAMMING
 # -----------------------
 
+# Each item can only go in once.
+# State needs two things: which items are still on offer, and room left in the bag.
+# Table is 2D
+
+# Variants:
+# 1- Tabulation
+
 def knapsack(weights, values, capacity):
     n = len(weights)
     # table represents the best value i can get if only allowed to take i items, and bag holds w kgs max
