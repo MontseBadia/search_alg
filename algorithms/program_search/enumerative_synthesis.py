@@ -12,9 +12,10 @@ from time import perf_counter
 
 # Variants:
 # Each searcher is a loop over one enumerator. Enumerator is the variant:
-# 1- Raw enumeration      - no pruning          - test_candidates              - program_by_size
-# 2- Observational equiv. - dedupe by behaviour - test_candidates_by_behaviour - program_by_size_by_behaviour
-# 3- Same, levels cached  - dedupe + memo       - test_candidates_by_behaviour_improved    - program_by_size_by_behaviour_improved
+# 1- Raw enumeration      - no pruning
+# 2- Observational equiv. - dedupe by behaviour
+# 3- Same, levels cached  - dedupe + memo
+# 4- Typed.               - dsl typing
 
 # EXAMPLE
 # examples = [
@@ -83,6 +84,9 @@ def evaluate_program(program, x):
     if operation == "sub": # Subtraction
         return evaluate_program(program[1], x) - evaluate_program(program[2], x)
 
+    if operation == "lt": # Lower Than
+        return evaluate_program(program[1], x) < evaluate_program(program[2], x)
+
     raise ValueError(f"Unknown operation: {operation}")
 
 # 3------
@@ -94,7 +98,7 @@ def program_size(program):
     if operation in ("var", "const"):
         return 1
 
-    if operation in ("add", "mul", "sub"):
+    if operation in ("add", "mul", "sub", "lt"):
         return (1 + program_size(program[1]) + program_size(program[2]))
 
     raise ValueError(f"Unknown operation: {operation}")
@@ -118,6 +122,9 @@ def construct_op(op, value1 = None, value2 = None):
 
     if op == "sub":
         return ("sub", value1, value2)
+
+    if op == "lt":
+        return ("lt", value1, value2)
 
     raise ValueError(f"Unknown operation: {op}")
 
@@ -184,7 +191,7 @@ def test_candidates(examples, max_size = 9):
 # This is why for size 11, cached takes slightly longer than pruned
 # Memoizing only pays off when recomputed work exceeds bookkeeping overhead
 
-def measure_explosion(examples, sizes = (1, 3, 5, 7, 9, 11)):
+def measure_explosion(examples, sizes = (1, 3, 5, 7, 9)):
     print(f"{'size':>6} {'raw':>12} {'pruned':>10} {'cached':>10}"
           f"{'raw s':>10} {'pruned s':>10} {'cached s':>10}")
 
@@ -341,7 +348,196 @@ def test_candidates_by_behaviour_improved(examples, max_size = 9):
 
 # 11------
 # DSL should be typed so it can accept different types
+# Types reduce which programs can be composed
+# Observational equivalence collapses programs that behave identically on examples
 
+# Type Pruning -> can these programs legally compose?
+# Observational Pruning -> have i seen this behaviour before?
+
+# Define my primitives
+
+class MyPrimitives:
+    @staticmethod
+    def find_primitive_by_name(op_name):
+        primitives_classes = [
+            MyVariable,
+            MyConstant,
+            MyAdd,
+            MyMultiplication,
+            MySubtraction,
+            MyLowerThan,
+        ]
+
+        for p_class in primitives_classes:
+            if p_class.name() == op_name:
+                return p_class
+
+        raise ValueError(f"Unknown operation: {op_name}")
+            
+
+class MyVariable:
+    @staticmethod
+    def name():
+        return "var"
+
+    @staticmethod
+    def input_types():
+        return []
+
+    @staticmethod
+    def output_type():
+        return int
+
+class MyConstant:
+    @staticmethod
+    def name():
+        return "const"
+
+    @staticmethod
+    def input_types():
+        return []
+
+    @staticmethod
+    def output_type():
+        return int
+
+class MyAdd:
+    @staticmethod
+    def name():
+        return "add"
+
+    @staticmethod
+    def input_types():
+        return [int, int]
+
+    @staticmethod
+    def output_type():
+        return int
+
+class MyMultiplication:
+    @staticmethod
+    def name():
+        return "mul"
+
+    @staticmethod
+    def input_types():
+        return [int, int]
+
+    @staticmethod
+    def output_type():
+        return int
+
+class MySubtraction:
+    @staticmethod
+    def name():
+        return "sub"
+
+    @staticmethod
+    def input_types():
+        return [int, int]
+
+    @staticmethod
+    def output_type():
+        return int
+
+class MyLowerThan:
+    @staticmethod
+    def name():
+        return "lt"
+
+    @staticmethod
+    def input_types():
+        return [int, int]
+
+    @staticmethod
+    def output_type():
+        return bool
+
+
+# Use my primitives
+# Remember:
+# I'm filtering by exclusive behavior, but not the behaviour that solves the examples
+
+def program_by_size_by_behaviour_improved_extra_types(size, examples, searcher, requested_output_type):
+    if size % 2 == 0:
+        return []
+
+    input_checks = [x for x, _ in examples]
+
+    def behaviour(program):
+        # Behaviour should be ordered so we can compare correctly
+        return tuple(evaluate_program(program, x) for x in input_checks)
+
+    def register_candidate(program, program_size, output_type):
+        candidate_behaviour = behaviour(program)
+        # need to compare against output type because in Python, True == 1, but not for me
+        signature = (output_type, candidate_behaviour)
+
+        if signature not in searcher.seen_behaviours:
+            searcher.seen_behaviours.add(signature)
+            searcher.programs_by_type.setdefault(
+                (program_size, output_type), []
+            ).append(program)
+
+    # Base case
+    if 1 not in searcher.built_sizes:
+        for program in terminal_programs():
+            register_candidate(program, 1, int)
+        searcher.built_sizes.add(1)
+
+    # 3, 5, 7...
+    for current_size in range(3, size + 1, 2):
+        # Design choice: one searcher instance belongs to one fixed set of examples
+        # If need to test across different tasks, this needs fixing
+        if current_size in searcher.built_sizes:
+            continue
+
+        for op in ("add", "mul", "sub", "lt",):
+            primitive = MyPrimitives.find_primitive_by_name(op)
+
+            left_type, right_type = primitive.input_types()
+            primitive_output_type = primitive.output_type()
+
+            for left_size in range(1, current_size - 1, 2):
+                right_size = current_size - 1 - left_size
+        
+                for left in searcher.programs_by_type.get((left_size, left_type), []):
+                    for right in searcher.programs_by_type.get((right_size, right_type), []):
+                        candidate = construct_op(op, left, right)
+                        register_candidate(candidate, current_size, primitive_output_type)
+
+        searcher.built_sizes.add(current_size)
+
+    return searcher.programs_by_type.get((size, requested_output_type), [])
+
+
+class SearcherImproved:
+    def __init__(self):
+        self.programs = {}
+        self.seen_behaviours = set()
+
+        # Added after typing
+        self.programs_by_type = {}
+        self.built_sizes = set()
+
+def test_candidates_by_behaviour_improved_extra_types(examples, output_type, max_size = 9):
+    searcher = SearcherImproved()
+
+    for size in range(1, max_size + 1, 2):
+        for program in program_by_size_by_behaviour_improved_extra_types(size, examples, searcher, output_type):
+            if program_solved(program, examples):
+                return program
+
+    return None
+
+# Bool is 0 at 7 because all possible combinations at that time already exist on below levels
+# | Size | `int` | `bool` |
+# | ---: | ----: | -----: |
+# |    1 |     4 |      0 |
+# |    3 |    13 |      5 |
+# |    5 |    40 |      3 |
+# |    7 |   160 |      0 |
+# |    9 |   657 |      3 |
 
 
 
@@ -408,3 +604,29 @@ if __name__ == "__main__":
     assert test_candidates(unsolvable) is None
     assert test_candidates_by_behaviour(unsolvable) is None
     assert test_candidates_by_behaviour_improved(unsolvable) is None
+
+    # Typed DSL
+    boolean_examples = [
+        (1, True),
+        (2, False),
+        (3, False),
+        (4, False),
+    ]
+
+    print("\ntest candidates by behaviour improved extra types ----")
+    print(f"{test_candidates_by_behaviour_improved_extra_types(boolean_examples, output_type=bool, max_size=3)}")
+
+    # x < 2 is the smallest program that fits
+    assert test_candidates_by_behaviour_improved_extra_types(boolean_examples, output_type=bool, max_size=3) == ("lt", ("var",), ("const", 2))
+
+    # FAILURE CASE, no bool program fits this one
+    unsolvable_boolean = [
+        (1, True),
+        (2, True),
+        (3, False),
+        (4, True),
+    ]
+    assert test_candidates_by_behaviour_improved_extra_types(unsolvable_boolean, output_type=bool) is None
+    assert test_candidates_by_behaviour_improved_extra_types(boolean_examples, output_type=int) is None
+
+    print("typed searcher asserts pass")
