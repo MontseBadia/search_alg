@@ -26,12 +26,8 @@ from time import perf_counter
 # Synthetizer return value is something like:
 # (x * (1 + 1)) + 1
 
-# STAGES
-# Add types.
-# Add a cost model instead of raw AST size.
-
 # bare enumeration
-# → observational equivalence   ← you are here
+# → observational equivalence
 # → full synthesizer + measurements
 # → typed DSL
 # → richer primitives
@@ -48,6 +44,10 @@ from time import perf_counter
 # → observational equivalence pruning
 # → cached DP-style enumeration
 # → bounded failure behavior
+
+# WHY THIS CANNOT SCALE TO ARC
+# Program space grows exponentially in program size, and ARC needs composition that
+# are much bigger than anything here, and pruning does not reduce enough.
 
 
 # 1------
@@ -80,6 +80,9 @@ def evaluate_program(program, x):
     if operation == "mul":
         return evaluate_program(program[1], x) * evaluate_program(program[2], x)
 
+    if operation == "sub": # Subtraction
+        return evaluate_program(program[1], x) - evaluate_program(program[2], x)
+
     raise ValueError(f"Unknown operation: {operation}")
 
 # 3------
@@ -91,7 +94,7 @@ def program_size(program):
     if operation in ("var", "const"):
         return 1
 
-    if operation in ("add", "mul"):
+    if operation in ("add", "mul", "sub"):
         return (1 + program_size(program[1]) + program_size(program[2]))
 
     raise ValueError(f"Unknown operation: {operation}")
@@ -112,6 +115,9 @@ def construct_op(op, value1 = None, value2 = None):
     
     if op == "mul":
         return ("mul", value1, value2)
+
+    if op == "sub":
+        return ("sub", value1, value2)
 
     raise ValueError(f"Unknown operation: {op}")
 
@@ -134,7 +140,7 @@ def program_by_size(size):
     for i in range(3, size + 1, 2):
         programs[i] =  []
 
-        for op in ["add", "mul"]:
+        for op in ("add", "mul", "sub"):
             for left_size in range(1, i - 1, 2):
                 right_size = i - 1 - left_size
         
@@ -170,10 +176,15 @@ def test_candidates(examples, max_size = 9):
 
 
 # 6------
-# Watch combinatorial explosion
+# Watch combinatorial explosion (by adding depth levels and also by adding operators - I added "sub")
 # search space grows extremely fast, eventually running out of memory
 
-def measure_explosion(examples, sizes = (1, 3, 5, 7, 9)):
+# Note
+# Caching comes with its own bookkeeping overhead
+# This is why for size 11, cached takes slightly longer than pruned
+# Memoizing only pays off when recomputed work exceeds bookkeeping overhead
+
+def measure_explosion(examples, sizes = (1, 3, 5, 7, 9, 11)):
     print(f"{'size':>6} {'raw':>12} {'pruned':>10} {'cached':>10}"
           f"{'raw s':>10} {'pruned s':>10} {'cached s':>10}")
 
@@ -229,7 +240,7 @@ def program_by_size_by_behaviour(size, examples):
     for i in range(3, size + 1, 2):
         programs[i] =  []
 
-        for op in ("add", "mul"):
+        for op in ("add", "mul", "sub"):
             for left_size in range(1, i - 1, 2):
                 right_size = i - 1 - left_size
         
@@ -294,7 +305,7 @@ def program_by_size_by_behaviour_improved(size, examples, searcher):
 
         searcher.programs[current_size] =  []
 
-        for op in ("add", "mul"):
+        for op in ("add", "mul", "sub"):
             for left_size in range(1, current_size - 1, 2):
                 right_size = current_size - 1 - left_size
         
