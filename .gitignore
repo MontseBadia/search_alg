@@ -1,4 +1,12 @@
-local/
+# CACHE
 __pycache__/
 *.pyc
+
+# CONFIG
 .DS_Store
+CLAUDE.md
+
+# FOLDERS
+docs/
+local/
+theory/
