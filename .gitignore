@@ -5,6 +5,7 @@ __pycache__/
 # CONFIG
 .DS_Store
 CLAUDE.md
+compact.tex
 
 # FOLDERS
 docs/
