@@ -543,12 +543,8 @@ def run_correctness_checks():
 # --------------------------------------
 
 def run_baseline_experiment(params=None):
-    print("\n----- BASELINE TRAINING -----\n")
-
-    params = train(TRAINING_DATA, epochs=2000, learning_rate=0.1, seed=7, verbose=True, log_every=200)
-
-    print("\n----- UNSEEN OBJECTS -----\n")
-    print_predictions(params, TEST_OBJECTS)
+    if params is None:
+        params = train(TRAINING_DATA, epochs=2000, learning_rate=0.1, seed=7, verbose=True, log_every=200)
 
     print("\n----- LEARNED PARAMETERS -----\n")
     print_parameters(params)
