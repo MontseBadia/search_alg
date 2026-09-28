@@ -160,6 +160,54 @@ This showed that many different programs can explain the same training evidence.
 
 It also showed that **syntax and behavior are different**: two different ASTs can implement the same Boolean function.
 
+## Explosion note
+
+One of the clearest things I saw while implementing program induction was how quickly the hypothesis space explodes.
+
+With only four variables and the operators:
+
+```text
+NOT
+AND
+OR
+```
+
+the number of syntactically valid programs already grew like this:
+
+```text
+size 1 →   4 programs
+size 2 →   4 programs
+size 3 →  36 programs
+size 4 → 100 programs
+size 5 → 708 programs
+```
+
+That is **852 programs by size 5**, despite the DSL being tiny.
+
+The reason became obvious in the enumeration loop. For every binary operator, I have to consider many possible splits of the remaining program size between the left and right subtrees, and then combine every program from one side with every program from the other. Each new size therefore reuses the already-growing sets from smaller sizes multiplicatively.
+
+I also saw that syntactic growth is larger than behavioral growth. Many different ASTs compute exactly the same Boolean function. For example, two programs can look different while producing the same truth table over all 16 objects.
+
+That creates an important tension:
+
+```text
+syntax space grows extremely quickly
+while
+behavior space grows much more slowly
+```
+
+My first instinct is naturally to remove equivalent programs as early as possible. But for Bayesian induction that is not automatically valid, because the prior is defined over program syntax. If several syntactically different programs implement the same function, their probability mass must be combined rather than simply throwing all but one away.
+
+This was the point where the practical difficulty of program synthesis became very concrete to me. The challenge is not only finding a correct program. It is controlling a rapidly expanding hypothesis space while preserving the distinctions that matter for the inference procedure.
+
+The general lesson I took from the induction loop is:
+
+> **Search-space design is part of the learning algorithm.**
+
+The DSL, program-size measure, prior, pruning rules, equivalence handling, and search strategy all determine which hypotheses are reachable and how expensive inference becomes.
+
+This is directly relevant to ARC-style program synthesis: even with a small set of primitives, unrestricted composition creates an enormous search space very quickly. Useful abstraction is therefore not just a way to describe solutions; it is potentially what makes search tractable at all.
+
 ## How evidence changed the posterior
 
 With less informative evidence, simpler alternatives initially received more posterior mass than the true rule:
