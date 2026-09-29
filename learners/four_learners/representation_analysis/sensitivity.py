@@ -7,7 +7,7 @@
 
 import math
 from neural import predict, forward, train
-from learning_setup import TRAINING_DATA, OBJECTS
+from learning_setup import SIX_EXAMPLE_DATA, EIGHT_EXAMPLE_DATA, OBJECTS
 
 
 # ---------------------------------------
@@ -90,7 +90,7 @@ def feature_sensitivity(params, objects, feature_index):
 if __name__ == "__main__":
 
     print("\n -- Correct Function -- \n")
-    full_training_data = TRAINING_DATA + [((0, 1, 1, 0), False), ((1, 0, 1, 0), False)]
+    full_training_data = EIGHT_EXAMPLE_DATA
     print(f"training data count: {len(full_training_data)}")
     print("           hidden                output-relevant")
     trained_params = train(full_training_data, epochs=2000, learning_rate=0.1, seed=7, verbose=False, log_every=200)
@@ -99,9 +99,9 @@ if __name__ == "__main__":
         print(f"{str(name):8}  {str(sensitivity["hidden"]):18}    {str(sensitivity["logit"]):8}")
 
     print("\n -- Incorrect Function -- \n")
-    print(f"training data count: {len(TRAINING_DATA)}")
+    print(f"training data count: {len(SIX_EXAMPLE_DATA)}")
     print("           hidden                output-relevant")
-    trained_params = train(TRAINING_DATA, epochs=2000, learning_rate=0.1, seed=7, verbose=False, log_every=200)
+    trained_params = train(SIX_EXAMPLE_DATA, epochs=2000, learning_rate=0.1, seed=7, verbose=False, log_every=200)
     for index, name in enumerate(FEATURE_NAMES):
         sensitivity = feature_sensitivity(trained_params, OBJECTS, index)
         print(f"{str(name):8}  {str(sensitivity["hidden"]):18}    {str(sensitivity["logit"]):8}")

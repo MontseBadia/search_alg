@@ -10,7 +10,7 @@ import math
 import random
 
 from neural import train, predict
-from learning_setup import TRAINING_DATA, OBJECTS
+from learning_setup import SIX_EXAMPLE_DATA, EIGHT_EXAMPLE_DATA, OBJECTS
 
 
 # ----------------------------------------
@@ -27,11 +27,6 @@ PROBE_LEARNING_RATE = 0.1
 
 SEED = 7
 THRESHOLD = 0.5
-
-EXTRA_TRAINING_DATA = [
-    ((0, 1, 1, 0), False),
-    ((1, 0, 1, 0), False),
-]
 
 CONCEPTS = {
     "blue": lambda x: x[0],
@@ -51,8 +46,8 @@ def train_network(training_data):
 
 # Train correct and incorrect network
 def train_network_pair():
-    wrong_network = train_network(TRAINING_DATA)
-    correct_training_data = (TRAINING_DATA + EXTRA_TRAINING_DATA)
+    wrong_network = train_network(SIX_EXAMPLE_DATA)
+    correct_training_data = EIGHT_EXAMPLE_DATA
     correct_network = train_network(correct_training_data)
 
     return wrong_network, correct_network

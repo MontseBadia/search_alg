@@ -9,7 +9,7 @@
 from statistics import median, pstdev, quantiles
 
 from neural import train, predict
-from learning_setup import TRAINING_DATA, OBJECTS, hidden_concept
+from learning_setup import SIX_EXAMPLE_DATA, EIGHT_EXAMPLE_DATA, OBJECTS, hidden_concept
 from linear_probing import HIDDEN_SIZE, CONCEPTS, extract_hidden_values, train_probe, leave_one_out_score
 from causal_intervention import normalize, cosine_similarity, predict_from_hidden
 from sensitivity import feature_sensitivity
@@ -30,11 +30,6 @@ BLUE = 0
 LARGE = 1
 ROUNDED = 2
 STRIPED = 3
-
-EXTRA_TRAINING_DATA = [
-    ((0, 1, 1, 0), False),
-    ((1, 0, 1, 0), False),
-]
 
 
 # ----------------------------------------
@@ -459,9 +454,9 @@ def summarize_transition(wrong_results, correct_results):
 
 
 if __name__ == "__main__":
-    wrong_results = run_cross_seed_condition("6-example network", TRAINING_DATA)
+    wrong_results = run_cross_seed_condition("6-example network", SIX_EXAMPLE_DATA)
 
-    correct_training_data = (TRAINING_DATA + EXTRA_TRAINING_DATA)
+    correct_training_data = EIGHT_EXAMPLE_DATA
     correct_results = run_cross_seed_condition("8-example network", correct_training_data)
 
     summarize_results("6-example network", wrong_results)
