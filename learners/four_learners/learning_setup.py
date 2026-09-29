@@ -29,7 +29,7 @@ def hidden_concept(x):
     return bool(blue and large)
 
 # Evidence - examples given
-TRAINING_OBJECTS = [
+SIX_EXAMPLE_OBJECTS = [
     (1, 1, 0, 0),  # True
     (1, 1, 1, 1),  # True
     (0, 0, 0, 0),  # False
@@ -37,8 +37,19 @@ TRAINING_OBJECTS = [
     (1, 0, 0, 1), # Adding this example increased bayesian percentage
     (0, 1, 0, 1)  # Adding this example increased bayesian percentage even more
 ]
-TRAINING_DATA = [(x, hidden_concept(x)) for x in TRAINING_OBJECTS]
+SIX_EXAMPLE_DATA = [(x, hidden_concept(x)) for x in SIX_EXAMPLE_OBJECTS]
 
-# Queries - remaining examples not seen
-TEST_OBJECTS = [x for x in OBJECTS if x not in TRAINING_OBJECTS]
+# Add these in order for the seven- and eight-example interventions.
+COUNTEREXAMPLE_OBJECTS = [(0, 1, 1, 0), (1, 0, 1, 0)]
+COUNTEREXAMPLE_DATA = [(x, hidden_concept(x)) for x in COUNTEREXAMPLE_OBJECTS]
+EIGHT_EXAMPLE_OBJECTS = SIX_EXAMPLE_OBJECTS + COUNTEREXAMPLE_OBJECTS
+EIGHT_EXAMPLE_DATA = SIX_EXAMPLE_DATA + COUNTEREXAMPLE_DATA
 
+# Queries - remaining examples not seen in each condition
+SIX_EXAMPLE_TEST_OBJECTS = [x for x in OBJECTS if x not in SIX_EXAMPLE_OBJECTS]
+EIGHT_EXAMPLE_TEST_OBJECTS = [x for x in OBJECTS if x not in EIGHT_EXAMPLE_OBJECTS]
+
+# The original learner demos use the six-example baseline.
+TRAINING_OBJECTS = SIX_EXAMPLE_OBJECTS
+TRAINING_DATA = SIX_EXAMPLE_DATA
+TEST_OBJECTS = SIX_EXAMPLE_TEST_OBJECTS

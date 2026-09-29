@@ -16,7 +16,10 @@
 # 8. Behavioral evaluation
 # 9. Seed and evidence-intervention experiments
 
-from learning_setup import OBJECTS, TEST_OBJECTS, TRAINING_DATA, hidden_concept
+from learning_setup import (
+    OBJECTS, TEST_OBJECTS, TRAINING_DATA, hidden_concept,
+    SIX_EXAMPLE_DATA, EIGHT_EXAMPLE_DATA, COUNTEREXAMPLE_DATA,
+)
 import random
 import math
 
@@ -561,24 +564,10 @@ def run_baseline_experiment(params=None):
 # Intervention 1: add (0, 1, 1, 0) -> False
 # Intervention 2: also add (1, 0, 1, 0) -> False
 def run_evidence_interventions():
-    first_counterexample = (0, 1, 1, 0)
-    second_counterexample = (1, 0, 1, 0)
-
     datasets = [
-        ("baseline", list(TRAINING_DATA)),
-        (
-            "+ first discriminating example",
-            list(TRAINING_DATA)
-            + [(first_counterexample, hidden_concept(first_counterexample))],
-        ),
-        (
-            "+ two discriminating examples",
-            list(TRAINING_DATA)
-            + [
-                (first_counterexample, hidden_concept(first_counterexample)),
-                (second_counterexample, hidden_concept(second_counterexample)),
-            ],
-        ),
+        ("baseline", list(SIX_EXAMPLE_DATA)),
+        ("+ first discriminating example", SIX_EXAMPLE_DATA + COUNTEREXAMPLE_DATA[:1]),
+        ("+ two discriminating examples", list(EIGHT_EXAMPLE_DATA)),
     ]
 
     target = true_behaviour(OBJECTS)
