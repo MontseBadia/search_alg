@@ -330,8 +330,6 @@ different learned function
 
 I then added examples that directly ruled out the spurious generalization.
 
-I then added examples that directly ruled out the spurious generalization.
-
 ```text
 Original 6 examples:
 0 / 100 seeds recovered the true function
