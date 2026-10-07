@@ -1,6 +1,7 @@
 import torch
 
 # Notes:
+# Implements raw attention
 # - No batch dimension, otherwise I'd have to change the K.T
 
 if __name__ == "__main__":
