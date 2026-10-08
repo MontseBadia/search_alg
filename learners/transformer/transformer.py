@@ -26,7 +26,8 @@ class MyTransformer(nn.Module):
         output, attention = self.block(X)
 
         # Classifies using final token representation
-        logits = self.classifier(output[-1])
+        final_token = output[:, -1, :] # takes all examples, last position, all features
+        logits = self.classifier(final_token)
 
         return logits, attention
     
@@ -93,7 +94,12 @@ class SelfAttention(nn.Module):
 if __name__ == "__main__":
     torch.manual_seed(0)
 
-    tokens = torch.tensor([5, 4, 7])
+    tokens = torch.tensor([
+        [5, 4, 7],
+        [1, 3, 7],
+        [6, 2, 7],
+        [0, 5, 7],
+    ])
     positions = torch.tensor([0, 1, 2])
 
     # Config
@@ -106,14 +112,26 @@ if __name__ == "__main__":
 
     transformer = MyTransformer(d_model, d_head, d_mlp, d_voc, d_pos, p)
     logits, attention = transformer(tokens, positions)
-
     print(logits)
 
     # LOSS
     loss_fn = nn.CrossEntropyLoss()
-    target = torch.tensor(2)
+    targets = torch.tensor([
+        2,  # (5 + 4) % 7
+        4,  # (1 + 3) % 7
+        1,  # (6 + 2) % 7
+        5,  # (0 + 5) % 7
+    ])
     # Cross entropy loss works with batches, it needs the logits as (batches, classes)
     # and the target as (1,) one target per batch item
-    loss = loss_fn(logits.unsqueeze(0), target.unsqueeze(0))
-
+    # loss = loss_fn(logits.unsqueeze(0), target.unsqueeze(0))
+    loss = loss_fn(logits, targets)
     print(loss)
+
+    print(logits.shape)
+    print(targets.shape)
+
+    for i, logit in enumerate(logits):
+        prediction = logit.argmax()
+        print("prediction: ", prediction.item())
+        print("target: ", targets[i].item())
