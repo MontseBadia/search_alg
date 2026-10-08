@@ -6,6 +6,7 @@ __pycache__/
 *.pt
 *.pth
 *.ckpt
+*.csv
 
 # CONFIG
 .DS_Store
