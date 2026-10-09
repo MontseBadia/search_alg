@@ -87,7 +87,7 @@ def evaluate(step, transformer, X_train, y_train, X_test, y_test, positions, los
     print_metrics(step, train_loss, test_loss, train_acc, test_acc, param_norm)
 
 def train(X_train, y_train, X_test, y_test, positions, transformer, loss_fn, optimizer,
-          checkpoint_dir, config, train_idx, test_idx, steps=5000):
+          checkpoint_dir, config, train_idx, test_idx, steps=5000, solved_evals=4):
     history = {
         "step": [],
         "train_loss": [],
@@ -102,6 +102,8 @@ def train(X_train, y_train, X_test, y_test, positions, transformer, loss_fn, opt
         checkpoint_dir / "step_0.pt",
         transformer, optimizer, 0, config, train_idx, test_idx, history
     )
+
+    solved_count = 0 # Consecutive evaluations with test acc 1.0
 
     for step in range(1, steps + 1):
         transformer.train()
@@ -120,6 +122,16 @@ def train(X_train, y_train, X_test, y_test, positions, transformer, loss_fn, opt
                 checkpoint_dir / f"step_{step}.pt",
                 transformer, optimizer, step, config, train_idx, test_idx, history
             )
+
+            # Early stop on success only
+            if history["test_acc"][-1] == 1.0:
+                solved_count += 1
+            else:
+                solved_count = 0
+
+            if solved_count == solved_evals:
+                print(f"solved: test acc 1.0 for {solved_evals} evaluations, stopping at step {step}")
+                break
 
     return history
 
