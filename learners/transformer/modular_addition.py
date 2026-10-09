@@ -4,6 +4,9 @@ import torch
 from torch import nn
 from pathlib import Path
 import csv
+import os
+from contextlib import redirect_stdout
+from multiprocessing import Pool
 
 
 # NOTES:
@@ -163,21 +166,15 @@ def save_model_checkpoint(path, transformer, optimizer, step, config, train_idx,
 
 
 def checkpoint_step(step):
-    if step in (0, 1000, 2000):
-        return True
-    if 60000 <= step <= 85000:
-        return step % 2500 == 0
     return step % 5000 == 0
 
 
 
-if __name__ == "__main__":
-    SEED = 4
-    SPLIT_SEED = 0
-    SPLIT = "ordered" # "ordered" or "unordered"
+def run_experiment(SEED, SPLIT_SEED, SPLIT, weight_decay, steps):
+    torch.set_num_threads(1) # One thread per process
     torch.manual_seed(SEED)
 
-    # -- CONFIG -- 
+    # -- CONFIG --
     d_pos = 3
     d_model = 32 # 4
     d_head = 16 # 2
@@ -185,18 +182,14 @@ if __name__ == "__main__":
     p = 17 # How many possible output logits
     d_voc = p + 1
     lr = 1e-3
-    weight_decay = 1e-1
 
     # -- DATA --
     X, y = input_and_labels(p)
 
-    print(X.shape)
-    print(y.shape)
-
     # for i in range(5):
     #     print(X[i], "->", y[i])
 
-    # -- SPLITS -- 
+    # -- SPLITS --
     X_train, y_train, X_test, y_test, train_idx, test_idx = data_splits(X, y, SPLIT_SEED, SPLIT)
 
     # -- POSITIONS -- 
@@ -221,14 +214,36 @@ if __name__ == "__main__":
         "d_pos": d_pos,
         "lr": lr,
         "weight_decay": weight_decay,
+        "steps": steps, # Max steps, a run can stop earlier if solved
     }
 
-    checkpoint_dir = Path(__file__).resolve().parent / "checkpoints_p17" / SPLIT / f"wd{weight_decay}" / f"run_seed_{SEED}"
+    checkpoint_dir = Path(__file__).resolve().parent / "checkpoints_p17" / SPLIT / f"wd{weight_decay}" / f"run_seed_{SEED}_split_{SPLIT_SEED}"
     checkpoint_dir.mkdir(parents=True, exist_ok=False)
 
-    train(
-        X_train, y_train, X_test, y_test, positions,
-        transformer, loss_fn, optimizer,
-        checkpoint_dir, config, train_idx, test_idx,
-        steps=120000
-    )
+    # Each run logs to its own file
+    with (checkpoint_dir / "train.log").open("w") as log, redirect_stdout(log):
+        history = train(
+            X_train, y_train, X_test, y_test, positions,
+            transformer, loss_fn, optimizer,
+            checkpoint_dir, config, train_idx, test_idx,
+            steps=steps
+        )
+
+    print(f"done {checkpoint_dir.relative_to(checkpoint_dir.parents[3])} | "
+          f"step {history['step'][-1]} | test acc {history['test_acc'][-1]:.3f}")
+
+
+if __name__ == "__main__":
+    # -- GRID --
+    SEEDS = [0, 1, 2, 3, 4]
+    SPLIT_SEEDS = [0, 1, 2]
+    SPLITS = ["unordered"] # "ordered" and/or "unordered"
+    WEIGHT_DECAYS = [1e-1, 1.0]
+    STEPS = 200000 
+    WORKERS = 6 # Parallel runs
+
+    runs = list(product(SEEDS, SPLIT_SEEDS, SPLITS, WEIGHT_DECAYS, [STEPS]))
+    print(f"{len(runs)} runs")
+
+    with Pool(WORKERS) as pool:
+        pool.starmap(run_experiment, runs)
