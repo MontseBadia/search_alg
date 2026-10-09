@@ -550,19 +550,24 @@ This created:
 
 ordered pairs.
 
-A much cleaner delayed-generalization trajectory appeared in an initial run:
+The first p=17 runs still used the **ordered split** (the grouped split from section 15 wasn't switched on yet), so the headline held-out accuracy includes swap pairs.
+
+Seed 0, wd = 0.1, split into the 55 swap and 32 no-swap held-out pairs:
 
 ```text
-~2k:   train acc = 1.0, test acc ≈ 0.14
-10k:   test acc ≈ 0.29
-20k:   test acc ≈ 0.56
-30k:   test acc ≈ 0.71
-50k:   test acc ≈ 0.84
-60k:   test acc ≈ 0.89
-85k:   test acc ≈ 0.91
+step   held-out   swap   no-swap
+2k     0.14       0.22   0.00     (train acc = 1.0)
+10k    0.29       0.45   0.00
+20k    0.56       0.84   0.09
+30k    0.71       1.00   0.22
+50k    0.84       1.00   0.56
+60k    0.89       1.00   0.69
+85k    0.91       1.00   0.75
 ```
 
-This was substantially stronger than the p=7 behavior.
+The headline number is inflated by the leak: swap pairs are solved by 30k. But no-swap pairs also climb from 0 to 0.75, which never happened at p=7. So p=17 shows real unseen-pair generalization, even in the leaky run.
+
+Only seeds 0 and 1 of 5 looked like this. Seeds 2-4 were at 0.17, 0.33 and 0.41 held-out at 85k.
 
 ---
 
@@ -627,33 +632,29 @@ This gives the model more evidence about the modular rule without reintroducing 
 
 Checkpoints were introduced to support both reproducibility and later mechanistic analysis.
 
-### Per-checkpoint state
+What the code actually saves, every 5k steps, in `checkpoints_p17/<split>/wd<wd>/run_seed_<seed>_split_<split_seed>/step_<N>.pt`:
 
-Useful changing state includes:
+### Per-checkpoint state
 
 ```text
 step
-model.state_dict()
-optimizer.state_dict()
-torch RNG state
-CUDA RNG state if relevant
+model_state       (model.state_dict())
+optimizer_state   (optimizer.state_dict(), AdamW moments)
 ```
 
 ### Experiment-level metadata
 
-Fixed information should be stored separately:
+Stored in every checkpoint too (small, so duplication is fine):
 
 ```text
-model configuration
-optimizer configuration
-modulus p
-train/test split indices
-seed
+config:  init_seed, split_seed, split, p, d_model, d_head, d_mlp,
+         d_voc, d_pos, lr, weight_decay, steps
+train_idx, test_idx
 ```
 
 ### History
 
-Training history should be stored separately rather than copied into every checkpoint:
+The cumulative history is copied into every checkpoint and also written to `history.csv` in the run folder (overwritten at each save):
 
 ```text
 step
@@ -663,6 +664,8 @@ train accuracy
 test accuracy
 parameter norm
 ```
+
+Storing it once per run would be cleaner, but each checkpoint is only ~113 KB.
 
 ### Data tensors
 
