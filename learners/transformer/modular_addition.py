@@ -21,13 +21,27 @@ def input_and_labels(p):
 
     return X, y
 
-def data_splits(X, y, split_seed=0):
+def data_splits(X, y, split_seed=0, scheme="ordered"):
     generator = torch.Generator().manual_seed(split_seed) # Random number generator
-    # Create random permuation of the dataset, produces tensor with indices from 0-48 in random order
-    perm = torch.randperm(len(X), generator=generator)
-    train_size = int(0.7 * len(X)) # Split size
-    train_ids = perm[:train_size] # Train indices
-    test_ids = perm[train_size:] # Test indices
+
+    if scheme == "ordered":
+        # Create random permuation of the dataset, produces tensor with indices from 0-48 in random order
+        perm = torch.randperm(len(X), generator=generator)
+        train_size = int(0.7 * len(X)) # Split size
+        train_ids = perm[:train_size] # Train indices
+        test_ids = perm[train_size:] # Test indices
+    elif scheme == "unordered":
+        # Split over unordered pairs, so (a, b) and (b, a) always land on the same side
+        # Otherwise the test set can be solved by looking up the mirror pair
+        keys = sorted({(min(a, b), max(a, b)) for a, b in X[:, :2].tolist()})
+        perm = torch.randperm(len(keys), generator=generator)
+        train_keys = {keys[i] for i in perm[:int(0.7 * len(keys))].tolist()} # 70% of unordered pairs, not rows
+        in_train = torch.tensor([(min(a, b), max(a, b)) in train_keys for a, b in X[:, :2].tolist()])
+        train_ids = in_train.nonzero().squeeze(1)
+        test_ids = (~in_train).nonzero().squeeze(1)
+    else:
+        raise ValueError(f"unknown split scheme: {scheme}")
+
     X_train, y_train = X[train_ids], y[train_ids] # Train data
     X_test, y_test = X[test_ids], y[test_ids] # Test data
 
@@ -146,8 +160,9 @@ def checkpoint_step(step):
 
 
 if __name__ == "__main__":
-    SEED = 0
+    SEED = 4
     SPLIT_SEED = 0
+    SPLIT = "ordered" # "ordered" or "unordered"
     torch.manual_seed(SEED)
 
     # -- CONFIG -- 
@@ -155,7 +170,7 @@ if __name__ == "__main__":
     d_model = 32 # 4
     d_head = 16 # 2
     d_mlp = 64 # 8
-    p = 7 # How many possible output logits
+    p = 17 # How many possible output logits
     d_voc = p + 1
     lr = 1e-3
     weight_decay = 1e-1
@@ -170,7 +185,7 @@ if __name__ == "__main__":
     #     print(X[i], "->", y[i])
 
     # -- SPLITS -- 
-    X_train, y_train, X_test, y_test, train_idx, test_idx = data_splits(X, y, SPLIT_SEED)
+    X_train, y_train, X_test, y_test, train_idx, test_idx = data_splits(X, y, SPLIT_SEED, SPLIT)
 
     # -- POSITIONS -- 
     positions = torch.tensor([0, 1, 2])
@@ -185,6 +200,7 @@ if __name__ == "__main__":
     config = {
         "init_seed": SEED,
         "split_seed": SPLIT_SEED,
+        "split": SPLIT,
         "p": p,
         "d_model": d_model,
         "d_head": d_head,
@@ -195,7 +211,7 @@ if __name__ == "__main__":
         "weight_decay": weight_decay,
     }
 
-    checkpoint_dir = Path(__file__).resolve().parent / "checkpoints" / f"run_seed_{SEED}"
+    checkpoint_dir = Path(__file__).resolve().parent / "checkpoints_p17" / SPLIT / f"wd{weight_decay}" / f"run_seed_{SEED}"
     checkpoint_dir.mkdir(parents=True, exist_ok=False)
 
     train(
