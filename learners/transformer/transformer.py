@@ -21,13 +21,20 @@ class MyTransformer(nn.Module):
 
         self.classifier = nn.Linear(d_model, p)
 
-    def forward(self, X, pos):
+    def forward(self, X, pos, return_cache=False):
         X = self.token_embedding(X) + self.position_embedding(pos)
         output, attention = self.block(X)
 
         # Classifies using final token representation
         final_token = output[:, -1, :] # takes all examples, last position, all features
         logits = self.classifier(final_token)
+
+        if return_cache:
+            cache = {
+                "final_residual": final_token,
+                "attention": attention,
+            }
+            return logits, cache
 
         return logits, attention
     
