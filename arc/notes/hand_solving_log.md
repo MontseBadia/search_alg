@@ -33,6 +33,21 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - swap_objects
 - layer_order
 - to_column
+- find_path
+- fill_path
+- locate_corners
+- draw_line
+- find_edge_bumps
+- find_edge_notches
+- mirror_edge_feature
+- split_blocks
+- draw_frame
+- find_object_edge
+- drop_through
+- replicate_toward
+- match_by_color
+- symmetry_axis
+- parity_check
 
 ---
 
@@ -157,6 +172,152 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - ops: find_objects, layer_order, to_column
 - difficulty 1-5: 1
 - guess: will the model get it? yes, few objects and overlaps
+
+### Task id: 753ea09b
+
+- time: 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems like a certain path gets color-filled
+- first hypothesis: there is a trace of a color which is not the background color, it marks a path and it needs to be filled with the same color
+- revised when / why: no
+- final rule (one line): long lines of one color bound a path from edge to edge; fill the path with that color, other color cells inside stay
+- ops: find_path, fill_path
+- difficulty 1-5: 1
+- guess: will the model get it? yes, path is easy because it is long
+
+### Task id: 7d7772cc
+
+- time: < 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: grid is split, dots on one side seems to move, not the other ones
+- first hypothesis: grid is split, the enclosed side defines the colored cells that must get closer to the band, otherwise colored cells must shift to edge always moving perpendicular to the band
+- revised when / why: no
+- final rule (one line): enclosed strip is a legend; each dot on the open side compares with the legend cell in its line: if same color, it moves next to band, otherwise it moves to final edge
+- ops: read_legend, find_objects, move_to_edge, stack_object
+- difficulty 1-5: 1
+- guess: will the model get it? yes, examples are clear
+
+### Task id: 7ec998c9
+
+- time: < 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems i need to trace a color path from one edge to another crossing the coloured cell in the middle
+- first hypothesis: if the colored cell is in the centre, draw a path from bottom left to top right; otherwise draw path from top left to bottom right
+- revised when / why: no
+- final rule (one line): draw path in color 1: along top edge from a corner to the dot's column, down that column, dot kept, along bottom edge to opposite corner; start top left, or top right if dot is at exact center
+- ops: find_objects, locate_corners, draw_line
+- difficulty 1-5: 2
+- guess: will the model get it? yes, simple rule
+
+### Task id: 8dab14c2
+
+- time: < 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems shapes with cells that stand out or make a whole create the opposite effect on the other side
+- first hypothesis: shape can have holes or standing out cells; if hole, it should create a stand out cell on the opposite side; and the same for stand out cells
+- revised when / why: no
+- final rule (one line): each bump/notch on a shape's edge adds the opposite at the same line on the opposite edge; originals stay
+- ops: find_objects, find_edge_bumps, find_edge_notches, mirror_edge_feature
+- difficulty 1-5: 2
+- guess: will the model get it? yes, shapes are simple
+
+### Task id: 8fff9e47
+
+- time: 5 minutes
+- solved? (attempts): yes, 1 attempt but took long because I miscalculated grid size
+- noticed first: we start with a legend and then draw rectangles inside rectangles following legend colors
+- first hypothesis: input is legend, it starts reading from bottom right to bottom left, then each row up. first color defines half bottom right edge stripe, second half bottom left edge stripe, third half bottom right but second row, etc. Each row up indicates whether to start from top or bottom, alternatively
+- revised when / why: no
+- final rule (one line): input is 2x2 blocks, read from bottom-right block leftwards, then up; each block is one ring from outside in, its 4 cells color the ring's 4 corner L's in the same positions; output side is 2 x number of blocks
+- ops: read_legend, split_blocks, draw_frame
+- difficulty 1-5: 4
+- guess: will the model get it? no, legend is hard to read
+
+### Task id: 963c33f8
+
+- time: 10 minutes
+- solved? (attempts): yes, 2 attemps, failed first one because I slided object vertically and horizontally, then only vertically
+- noticed first: there is a dark red shape that gets split, rest of shapes remain
+- first hypothesis: dark red object on top slides down each column; if it has blue ending, it stops whenever it touches gray object, otherwise it slides until bottom edge
+- revised when / why: yes, because on second example, it slides until edge but then some gray cells disappear, and on third example it slides and shifts right - i still haven't figured out why
+- final rule (one line): 9 block splits into columns that fall; columns ending in blue stop when they find one gray; if no blue, they fall through gray until bottom edge, overwriting it. UNRESOLVED: example two has some gray cells that disappeared, example three has column shifted one to the right
+- ops: find_objects, find_object_edge, stack_object, drop_through
+- difficulty 1-5: 5
+- guess: will the model get it? no, rule is hard, still not clear to me
+- NOISY TASK: I solved it without finding the exact rule, or it could be that example two and three have some errors in it
+
+### Task id: 9720b24f
+
+- time: < 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: some objects have other smaller objects inside, it seems they disappear in the output
+- first hypothesis: objects have U shape: if they have smaller objects inside, they get deleted; rest remain
+- revised when / why: no
+- final rule (one line): small objects within a U-shape objects bounding box are erased; U-shape and objects outside them stay
+- ops: bounding_box, erase
+- difficulty 1-5: 1
+- guess: will the model get it? yes, U shape is easy to find
+
+### Task id: 985ae207
+
+- time: 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems square shape copies itself towards the colored object that matches the color they have inside
+- first hypothesis: square object with color inside copies itself towards the colored object that matches the inside, until it touches it
+- revised when / why: no
+- final rule (one line): each 3x3 ring repeats itself in steps of 3 toward the block whose color matches its center; stops with the first copy that overlaps, overwriting it
+- ops: find_objects, replicate_toward, match_by_color
+- difficulty 1-5: 2
+- guess: will the model get it? yes, shapes are easy
+
+### Task id: a09f6c25
+
+- time: 2 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems objects change color but remain at place
+- first hypothesis: objects that are horizontally aligned, turn blue; vertically-aligned turn green; diagonally aligned turn purple
+- revised when / why: no
+- final rule (one line): shapes are recolored by symmetry axis: vertical axis turns green, horizontal axies turns blue, diagonal axis turns purple; single cells are erased
+- ops: find_objects, symmetry_axis, recolor, erase
+- difficulty 1-5: 2
+- guess: will the model get it? no, some objects can get confusing
+
+### Task id: a6953f00
+
+- time: 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems that grid colors get compacted into a smaller grid
+- first hypothesis: output is always 2x2; generated by always choosing 2x2 from top right or left of input, depending on number of input rows: right if even, left if odd
+- revised when / why: no
+- final rule (one line): output is 2x2 corner from the top of the input: right corner if grid size even, left if odd
+- ops: parity_check, crop
+- difficulty 1-5: 3
+- guess: will the model get it? no, rule can be difficult to find
+- underdetermined rule: not sure whether rows or columns define parity check
+
+### Task id:
+
+- time:
+- solved? (attempts):
+- noticed first:
+- first hypothesis:
+- revised when / why:
+- final rule (one line):
+- ops:
+- difficulty 1-5:
+- guess: will the model get it?
+
+### Task id:
+
+- time:
+- solved? (attempts):
+- noticed first:
+- first hypothesis:
+- revised when / why:
+- final rule (one line):
+- ops:
+- difficulty 1-5:
+- guess: will the model get it?
 
 ### Task id:
 
