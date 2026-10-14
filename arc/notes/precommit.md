@@ -28,7 +28,7 @@ If the model solves more than 25/30: add 10 more from the remaining 203 (seed 1)
   522fdd07
   5623160b 
   5a719d11
-  68bc2e87 - working
+  68bc2e87
   753ea09b
   7d7772cc
   7ec998c9
@@ -48,7 +48,7 @@ If the model solves more than 25/30: add 10 more from the remaining 203 (seed 1)
   e729b7be
   e84fef15
   ecb67b6d
-  fbf15a0b
+  fbf15a0b - done
 
 
 ### Setup
@@ -87,6 +87,11 @@ Provisional failure tags (expect to change these after reading transcripts, log 
 - right transform, wrong color
 - overfit to one train pair
 - underdetermined rule: train pairs allow 2+ rules, model picked one that fails the test
+- constant from examples: rule needs a value only learnable across pairs (a color, a cycle, a size), model invents or misses it
+- simpler rule: model finds an easier rule that fits most pairs but not all
+- off-by-one stop: right transform, wrong stopping point (touching vs overlapping)
+- noisy task, invented explanation: task has unexplained anomalies, model makes up a rule to cover them
+- right grid, wrong stated rule: output correct but the stated rule wouldn't produce it
 - 
 
 ---

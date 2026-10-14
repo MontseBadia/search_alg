@@ -48,6 +48,15 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - match_by_color
 - symmetry_axis
 - parity_check
+- manhattan_distance
+- color_cycle
+- orient_by_long_side
+- concat_with_gap
+- output_size
+- rotate_180
+- majority_block
+- different_cells
+- diagonal_run
 
 ---
 
@@ -94,7 +103,7 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - noticed first: blue shapes get split into two, ones go to right and ones go to left
 - first hypothesis: blue shapes get moved horizontally, if the blue bouding box is closed and it's all blue, they get moved to the left and turn red; if the boundaries contains yellow, they turn green and get moved to the right
 - revised when / why: no
-- final rule (one line): blue shapes with all holes sealed turn red and slide to left edge; shapes with a hole open to the outside turn green and slide to right edge; same rows, same shape
+- final rule (one line): blue (1) shapes with all holes sealed turn red (2) and slide to left edge; shapes with a hole open to the outside turn green (3) and slide to right edge; same rows, same shape
 - ops: find_objects, has_open_hole, move_to_edge, recolor
 - difficulty 1-5: 3
 - guess: will the model get it? no, guessing the rule to move to right or left is difficult
@@ -143,7 +152,7 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - noticed first: shapes of different colors that are next to each other, are getting far apart so colors are not touching each other
 - first hypothesis: objects of different color get far apart, moved to the grid edges except for the dark red objects that remain
 - revised when / why: yes, i did not define the move direction rule, i moved each piece to the nearest edge
-- final rule (one line): dark red objects remain at their place; every other object slides away from it until it touches the grid edge; direction from the touching dark red cell to the piece
+- final rule (one line): dark red (9) objects remain at their place; every other object slides away from it until it touches the grid edge; direction from the touching dark red (9) cell to the piece
 - ops: find_objects, move_to_edge, adjacent_side, filter_by_color
 - difficulty 1-5: 4
 - guess: will the model get it? yes, direction should not be difficult to find
@@ -240,7 +249,7 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - noticed first: there is a dark red shape that gets split, rest of shapes remain
 - first hypothesis: dark red object on top slides down each column; if it has blue ending, it stops whenever it touches gray object, otherwise it slides until bottom edge
 - revised when / why: yes, because on second example, it slides until edge but then some gray cells disappear, and on third example it slides and shifts right - i still haven't figured out why
-- final rule (one line): 9 block splits into columns that fall; columns ending in blue stop when they find one gray; if no blue, they fall through gray until bottom edge, overwriting it. UNRESOLVED: example two has some gray cells that disappeared, example three has column shifted one to the right
+- final rule (one line): 9 block splits into columns that fall; columns ending in blue (1) stop when they find one gray (5); if no blue (1), they fall through gray (5) until bottom edge, overwriting it. UNRESOLVED: example two has some gray (5) cells that disappeared, example three has column shifted one to the right
 - ops: find_objects, find_object_edge, stack_object, drop_through
 - difficulty 1-5: 5
 - guess: will the model get it? no, rule is hard, still not clear to me
@@ -277,7 +286,7 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - noticed first: it seems objects change color but remain at place
 - first hypothesis: objects that are horizontally aligned, turn blue; vertically-aligned turn green; diagonally aligned turn purple
 - revised when / why: no
-- final rule (one line): shapes are recolored by symmetry axis: vertical axis turns green, horizontal axies turns blue, diagonal axis turns purple; single cells are erased
+- final rule (one line): shapes are recolored by symmetry axis: vertical axis turns green (3), horizontal axies turns blue (1), diagonal axis turns purple (6); single cells are erased
 - ops: find_objects, symmetry_axis, recolor, erase
 - difficulty 1-5: 2
 - guess: will the model get it? no, some objects can get confusing
@@ -295,50 +304,123 @@ Also keep a running list of ops I needed, for the Week 5 DSL.
 - guess: will the model get it? no, rule can be difficult to find
 - underdetermined rule: not sure whether rows or columns define parity check
 
-### Task id:
+### Task id: aaef0977
 
-- time:
-- solved? (attempts):
-- noticed first:
-- first hypothesis:
-- revised when / why:
-- final rule (one line):
-- ops:
-- difficulty 1-5:
-- guess: will the model get it?
+- time: 2 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: starts with grid and one cell color, then there is a pattern created centered at the colored cell
+- first hypothesis: starting out at colored cell, a mosaic pattern is created around the center, following colors from example
+- revised when / why: no
+- final rule (one line): color each cell by its Manhattan distance from the dot, stepping through the cycle of colors stated at the examples (3, 4, 0, 5, 2, 8, 9, 6, 1), starting at dot's color
+- ops: find_objects, manhattan_distance, color_cycle
+- difficulty 1-5: 2
+- guess: will the model get it? yes, patterns are easy to catch
 
-### Task id:
+### Task id: bd5af378
 
-- time:
-- solved? (attempts):
-- noticed first:
-- first hypothesis:
-- revised when / why:
-- final rule (one line):
-- ops:
-- difficulty 1-5:
-- guess: will the model get it?
+- time: 2 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: from two initial colors, a pattern is created and the orientation and colors depend on input
+- first hypothesis: starting with two colors, the L-shape shifts position but keeps almost same shape, the containing color forms pattern, rest is background; orientation is defined by vertex of L-shape
+- revised when / why: no
+- final rule (one line): L-shape moves one inward; old L cells take the fill color; diagonal of fill color from inner corner to opposite; both L corners and rest, azure (8)
+- ops: find_objects, translate, recolor, draw_line, fill
+- difficulty 1-5: 2
+- guess: will the model get it? yes, it's about copying pattern with proper colors
 
-### Task id:
+### Task id: d749d46f
 
-- time:
-- solved? (attempts):
-- noticed first:
-- first hypothesis:
-- revised when / why:
-- final rule (one line):
-- ops:
-- difficulty 1-5:
-- guess: will the model get it?
+- time: 4 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: it seems like shapes are copied against their symmetries, or similar
+- first hypothesis: objects at top are shifted horizontally against top edge, then those same objects are shifted vertically and positioned in the same order at the bottom edge, output has height 10 always
+- revised when / why: no
+- final rule (one line): objects from left to right are arranged twice, once at the top and once at the bottom of the grid; they have 1 column gaps in between; along the top, they ly on long side horizontally; along the bottom, they stand on long side vertically; width is the sum of long sides plus the gaps; height is 10
+- ops: find_objects, orient_by_long_side, concat_with_gap, move_to_edge, output_size
+- difficulty 1-5: 4
+- guess: will the model get it? no, rule is difficult to extract
 
-### Task id:
+### Task id: d753a70b
 
-- time:
-- solved? (attempts):
-- noticed first:
-- first hypothesis:
-- revised when / why:
-- final rule (one line):
-- ops:
-- difficulty 1-5:
-- guess: will the model get it?
+- time: 2 minutes
+- solved? (attempts): yes, 2 attempts because i had to review the rule
+- noticed first: diamond shapes shrink by one level, one cell shape grows to diamon by one level
+- first hypothesis: diamond shapes shrink by one level, one cell grows by one level
+- revised when / why: yes, because at first i thought all shapes shrink, but that is not true, some of them grow, some of them remain, depending on color
+- final rule (one line): diamond shapes change by color, same center: 2 shrinks by one leve, 5 grows one level, others (8, 9) unchanged
+- ops: find_objects, filter_by_color, shrink_from_center, expand_from_center
+- difficulty 1-5: 3
+- guess: will the model get it? yes, few shapes
+
+### Task id: db7260a4
+
+- time: < 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: seems like blue cell slides down: if reaches the bottom, it spreads into blue line, if stuck inside the shape, it fills the shape
+- first hypothesis: blue cell slides down: if it gets stuck inside U-shape, it fills cells inside shape, otherwise it reaches the bottom edge and spreads into a horizontal line
+- revised when / why: no
+- final rule (one line): blue (1) acts as water: falls straight down; if lands in cup with no gap, it fills the cup interior; if leaks, it keeps falling and may land in other cup, or until bottom edge where it spreads into a full horizontal line
+- ops: find_objects, has_open_hole, fill, move_to_edge, draw_line
+- difficulty 1-5: 1
+- guess: will the model get it? yes, three options: fills shape, leaks or converts to line
+
+### Task id: df9fd884
+
+- time: 1 minute
+- solved? (attempts): yes, 1 attempt
+- noticed first: yellow shapes remain, colored shapes move to bottom right side of the grid
+- first hypothesis: the grid is split vertically by two; on one side there is always a yellow shape with a colored shape (it can be on the edge or close to yellow shape), then output must move the colored shape to the other side of the grid and opposite side: if shape was touching edge, it should be close to yellow object this time, or other way around
+- revised when / why: no
+- final rule (one line): two yellow (4) cups in opposite corners; the colored shape moves to the bottom edge, in the columns of the top cup's openings; shape unchanged
+- ops: find_objects, find_edge_notches, filter_by_color, translate, move_to_edge
+- difficulty 1-5: 3
+- guess: will the model get it? yes, few shapes
+
+### Task id: e729b7be
+
+- time: 3 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: grid is split into two, shape on the left, it seems output produces a symmetry of the shape on the right side, but somehow distortioned
+- first hypothesis: grid is split into two, left side shape is projected symmetrically along the vertical axis, then horizontal axis
+- revised when / why: no
+- final rule (one line): left shape is copied to the right side rotated 180º around the center point, mirroring across both axes
+- ops: find_objects, split_grid, rotate_180
+- difficulty 1-5: 3
+- guess: will the model get it? yes, symmetry is easy once found
+
+### Task id: e84fef15
+
+- time: 15 minutes
+- solved? (attempts): yes, 3 attemps because it took me quite some time to get the rule
+- noticed first: grid is fully packed with smaller grids and patterns, it seems output is some kind of color pattern extracted from those
+- first hypothesis: smaller grids inside grid contain same info, black pieces remain black, if they touch other cells, those turn blue, pieces in the same row as black turn blue but only the one that is closest, pieces in the same column remain as they are unless they touch the black
+- revised when / why: yes because my rule did not work out, i tried modifying when and where the black defined the pattern but in my second guess it did not work for all three examples either, until I realised I can't get a rule that way so I must look at the smaller grids, then I found there is one smaller grid which is different and it defines which cells remain in color, and missing cells turn blue
+- final rule (one line): grid is 5x5 copies of one block, one copy has cells erased to 8; output is the block, erased cells marked blue (1)
+- ops: split_grid, majority_block, different_cells, recolor
+- difficulty 1-5: 5
+- guess: will the model get it? yes, rule is difficult to find visually but not hard to infer
+- comment: FAILED by ARC rules, only 2 attempts allowed
+
+### Task id: ecb67b6d
+
+- time: 2 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: seems like output is copied and only some shapes change color
+- first hypothesis: shapes that change color to azure (8) are those that contain three contiguous diagonal cells, no matter the direction
+- revised when / why: no
+- final rule (one line): objects of gray (5) that contain 3 cells in a diagonal line turn azure (8) whole object; others remain unchanged
+- ops: find_objects, diagonal_run, recolor
+- difficulty 1-5: 4
+- guess: will the model get it? no, too many confusing shapes
+
+### Task id: fbf15a0b
+
+- time: 2 minutes
+- solved? (attempts): yes, 1 attempt
+- noticed first: it looks like the grid gets cut using some rule, it somehow shrinks
+- first hypothesis: gray legend marks direction in which the grid needs to be split onto half, then output draws only the split that the legend is on
+- revised when / why: no
+- final rule (one line): two gray (5) markers: if stacked, cut grid into top/bottom halves; if side by side, cut into left/right halves; keep the half with the markers, erase markers to 8
+- ops: read_legend, split_grid, crop, erase
+- difficulty 1-5: 2
+- guess: will the model get it? no, legend is not intuitive
