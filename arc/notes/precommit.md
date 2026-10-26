@@ -83,6 +83,7 @@ If the model solves more than 25/30: add 10 more from the remaining 203 minus th
 - afe3afe9 thinking off, max 8000: reasoning moved into the answer, cut, no grid, 11 min
 - afe3afe9 medium, budget 16000: forced stop, answer given, 22.6 min, peak 17.86 GB
 - 33067df9 medium, budget 16000, batched (2 at once): natural finish at 11841 tokens, 20 min, peak 18.35 GB
+- f3e14006 medium, budget 16000: forced stop, answers to both tests, 22.7 min (added after freeze, pilot only)
 - batching: ~10.4 tok/s per call x 2 vs 12.9 alone -> ~1.6x throughput
 
 ### Predictions
@@ -135,6 +136,44 @@ Provisional failure tags (expect to change these after reading transcripts, log 
 - noisy task, invented explanation: task has unexplained anomalies, model makes up a rule to cover them
 - right grid, wrong stated rule: output correct but the stated rule wouldn't produce it
 - 
+
+### Addendum, 26 October 2026, before any scored run
+
+Pilot answers were 0/3, so accuracy could be near zero. Without other
+measures the variants couldn't be compared (floor effect). Added before
+any result on the 30 tasks exists.
+
+Secondary measures (same for every variant):
+- rule components captured: fraction of the parts of my final rule present
+  in the model's rule. Components for each task written in
+  notes/rule_components.md before reading any transcript
+- outcome distribution: counts of the 8 outcome categories per variant
+- shape correct: fraction of answers with the right output size
+- cells correct: among right-size answers, fraction of matching cells.
+  Diagnostic only, never credit
+
+Variant comparison: by accuracy as planned. If accuracy is near zero
+(pass@2 at most 2/30 in each variant), the comparison uses rule components
+and the outcome distribution instead. My rule-first prediction then reads:
+rule-first captures more rule components and has fewer "wrong rule"
+outcomes than text.
+
+Low-score rule: if pass@2 is at most 2/30 in both variants after sample 1,
+- samples 2 and 3 still run as planned
+- plus an exploratory frontier check: 10 of the 30 tasks (seed 2), text
+  variant, 1 sample, on a frontier model through its API, same prompt v1.
+  Model and settings fixed in their own addendum before it runs. Reported
+  separately as exploratory, never mixed with the main results
+
+Server crash without a complete response (connection dropped, reply cut
+off or not valid JSON, or no answer within 4 hours): not the model's
+outcome. Saved as a crash record beside the result (_crash-<time>.json),
+rerun alone once memory allows, never scored.
+Server errors that do return an answer stay format failures, as in Setup.
+
+If a call ever has more than one completed result (_dup files, e.g. the
+same call started twice by mistake), only the first completed attempt in
+attempts.jsonl counts; the others are kept on record and never scored.
 
 ---
 
