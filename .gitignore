@@ -15,6 +15,7 @@ CLAUDE.md
 AGENTS.md
 compact.tex
 .vscode/
+arc/.venv/
 
 # FOLDERS
 docs/
@@ -23,3 +24,7 @@ theory/
 arc/data/
 arc/data_agi1/
 arc/assets/
+arc/runs/
+
+# TEMP (hidden temp files save_new leaves if killed mid-write)
+.tmp-*
