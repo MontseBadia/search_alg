@@ -175,14 +175,14 @@ class TestRunCall(unittest.TestCase):
         with mock.patch("harness.RUNS", self.runs), \
                 mock.patch("harness.observe_server", lambda: self.FROZEN), \
                 mock.patch("harness.call_model", fake_result(response=OK_RESPONSE)):
-            saved = harness.run_call("18447a8d", "rule_first", 2)
-        self.assertEqual(saved, os.path.join(self.runs, "main", "18447a8d_rule_first_s2.json"))
+            saved = harness.run_call("18447a8d", "rule_first", 1)
+        self.assertEqual(saved, os.path.join(self.runs, "main", "18447a8d_rule_first_s1.json"))
         with open(saved) as f:
             result = json.load(f)
         self.assertEqual(result["run_info"]["server_observed"]["pid"], 4242)
-        self.assertEqual((result["sample"], result["run_name"]), (2, "main"))
+        self.assertEqual((result["sample"], result["run_name"]), (1, "main"))
         start = read_attempts(os.path.join(self.runs, "main"))[0]
-        self.assertEqual((start["server_pid"], start["sample"], start["run_name"]), (4242, 2, "main"))
+        self.assertEqual((start["server_pid"], start["sample"], start["run_name"]), (4242, 1, "main"))
         self.assertEqual(result["request"]["max_tokens"], SETTINGS["max_tokens"])  # frozen settings used
 
 
