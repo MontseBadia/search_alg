@@ -29,6 +29,10 @@ MODEL = "mlx-community/Qwen3.8-27B-4bit"
 # adds its own KV cache, and 2 of the largest tasks wouldn't fit in memory.
 SERVER = {"port": 8080, "kv_bits": 8, "prefill_step_size": 512, "max_num_seqs": 2}
 
+# Server environment. Logging only, same computation: progress line every
+# 100 tokens instead of 10. Not in the command line, so check_server can't see it.
+SERVER_ENV = {"MLX_VLM_LOG_PROGRESS_INTERVAL": "100"}
+
 HF_MODEL_DIR = os.path.expanduser(
     "~/.cache/huggingface/hub/models--" + MODEL.replace("/", "--"))
 VENV = os.path.join(HERE, ".venv")
@@ -59,6 +63,13 @@ def server_command():
     return (f"mlx_vlm.server --model {MODEL} --port {SERVER['port']} "
             f"--kv-bits {SERVER['kv_bits']} --prefill-step-size {SERVER['prefill_step_size']} "
             f"--max-num-seqs {SERVER['max_num_seqs']}")
+
+
+# What to paste for a manual start: env + caffeinate in front, so the process
+# command line still ends with server_command() and check_server passes.
+def paste_command():
+    env = " ".join(f"{k}={v}" for k, v in SERVER_ENV.items())
+    return f"{env} caffeinate -i {server_command()}"
 
 
 # Read from disk, stdlib only: the harness runs outside the venv.
@@ -118,6 +129,50 @@ def check_server(observed):
     if health.get("apc_enabled"):
         problems.append("prefix caching (APC) is on, not in the frozen setup")
     return problems
+
+
+# Runner only: a fresh server per pair, then stopped. Started from the venv
+# with exactly server_command(), so check_server sees the same command line as
+# when it's pasted. Output appended to log_path: the decode progress lines are
+# the only live view of a call. Refuses if something already listens on the
+# port, otherwise observe_server could find the old one and call it ready.
+def start_server(log_path, wait=900):
+    try:
+        old = observe_server()
+    except (RuntimeError, OSError):
+        old = None
+    if old:
+        raise RuntimeError(f"a server is already running (pid {old['pid']}), stop it first")
+    cmd = server_command().split()
+    cmd[0] = os.path.join(VENV, "bin", cmd[0])
+    env = {**os.environ, **SERVER_ENV}
+    with open(log_path, "a") as log:  # the child keeps its own copy of the handle
+        proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)
+    deadline = time.time() + wait
+    try:
+        while time.time() < deadline:
+            if proc.poll() is not None:
+                raise RuntimeError(f"server exited ({proc.returncode}) while loading, see {log_path}")
+            try:
+                observe_server()
+                return proc
+            except (RuntimeError, OSError):  # not listening yet / health not answering yet
+                time.sleep(5)
+        raise RuntimeError(f"server not ready after {wait} s, see {log_path}")
+    except BaseException:  # Ctrl+C or an odd /health too: never leave it running
+        if proc.poll() is None:
+            stop_server(proc)
+        raise
+
+
+# Exiting is what frees the GPU memory, a restart only counts once it's gone.
+def stop_server(proc):
+    proc.terminate()
+    try:
+        proc.wait(timeout=120)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
 
 
 # For a manual check before starting lanes: prints what's running and any mismatch.
