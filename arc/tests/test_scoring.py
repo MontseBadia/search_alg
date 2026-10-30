@@ -132,6 +132,13 @@ class TestScoreResult(unittest.TestCase):
         self.assertEqual(score_result(TASK, err),
                          {"auto_outcome": "format failure", "format_reason": "server error 500", "per_test": []})
 
+    def test_metal_out_of_memory_is_rerun(self):
+        body = ('{"detail":"Generation failed: [METAL] Command buffer execution failed: '
+                'Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)."}')
+        err = {"error": {"status": 500, "body": body}, "seconds": 1883.9}
+        self.assertEqual(score_result(TASK, err),
+                         {"auto_outcome": "crash, rerun", "format_reason": "out of memory", "per_test": []})
+
     def test_response_goes_through_score(self):
         self.assertEqual(score_result(TASK, response("```\n1 2\n3 4\n```"))["auto_outcome"], "solved")
         self.assertEqual(score_result(TASK, response("", "length"))["format_reason"], "hit max_tokens, no answer")

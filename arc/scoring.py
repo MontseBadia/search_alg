@@ -88,6 +88,9 @@ def score_result(task, result):
         return {"auto_outcome": "crash, rerun", "format_reason": result["crash"]["type"], "per_test": []}
     if "bad_response" in result:  # reply arrived but wasn't JSON: infrastructure, not the model
         return {"auto_outcome": "crash, rerun", "format_reason": "bad response", "per_test": []}
+    # Metal out of memory: the machine failed, not the model (two calls over the 45000 concurrency limit).
+    if "error" in result and "Insufficient Memory" in result["error"].get("body", ""):
+        return {"auto_outcome": "crash, rerun", "format_reason": "out of memory", "per_test": []}
     if "error" in result:
         return {"auto_outcome": "format failure",
                 "format_reason": f"server error {result['error']['status']}", "per_test": []}
