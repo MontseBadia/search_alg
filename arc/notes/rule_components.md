@@ -1,14 +1,21 @@
 ## Rule components
 
-Written before reading any transcript (precommit addendum, 26 October 2026).
-Each component is one part of the final rule that can be checked on its own in the model's rule.
+Written before reading any transcript (26 October 2026). Each component is one part of the final rule that can be checked on its own in the model's rule.
+
 Score per transcript: components present / components total.
 
 Judging:
 - paraphrase counts, same meaning in other words is present
 - binary, partly there is absent
-- coverage only: extra wrong parts in the model's rule don't lower it, the outcome category and tags record those
+- coverage only: extra wrong parts in the model's rule don't lower it, tags and notes record those
 - only what's in my final rule. Unresolved or underdetermined parts aren't components
+
+Added after sample 1 was judged (28 October 2026):
+- only the model's final stated rule counts. Text: the last rule statement before the grid. Rule-first: the Rule: line. Earlier thinking doesn't count
+- entailed counts: present if anyone applying the stated rule would necessarily get that part right. Consistent with it isn't enough
+- any component present -> not "wrong", even if the rule contradicts a train pair (partial comes first in the order)
+- all components present plus a wrong extra part -> "got rule", the extra goes in the note
+- other rules that fit all train pairs go in the note
 
 ---
 
