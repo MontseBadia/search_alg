@@ -255,3 +255,8 @@ attempts.jsonl counts; the others are kept on record and never scored.
   - right idea dropped: thinking had the rule, the final rule doesn't
   Score-dependent tags (right transform wrong colour, right grid wrong
   stated rule) added after scoring.
+- After scoring, from the answer grids (got rule, grid wrong rows):
+  - extra rule broke grid: an extra rule part the convention left in "got rule" causes wrong cells
+  - cell slips: a few cells wrong in an otherwise right grid
+  "right grid, wrong stated rule" not used: the 6 solved-but-partial rows
+  all give that grid from their stated rule
