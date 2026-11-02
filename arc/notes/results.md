@@ -50,7 +50,7 @@ Outcome distribution (final: format failure and solved from the score, the rest 
 | maybe_forced | 4/45 (9%) |
 | not forced | 13/15 (87%) |
 
-Strongest pattern in the data. Not causal: calls that don't converge are the ones hitting the budget, so forced mostly marks "lost". Whether the budget cut off a solution needs the thinking-token counts and a look at where the forced ones were going. maybe_forced overcounts (decisions, limitation 1).
+Strongest pattern in the data. Not causal: calls that don't converge are the ones hitting the budget, so forced mostly marks "lost". Thinking tokens counted with the tokenizer (2 Nov): all 45 at 15998-16001, the 15 natural stops at 2773-13195, nothing in between. maybe_forced was exact here. The model finishes well before the budget or never.
 
 ### Rule judgments vs grids
 
@@ -121,7 +121,6 @@ Ops (hand-solving log), 3+ tasks only, solved text / rf, mean components:
 
 ### Open
 
-- thinking-token counts: how many of the 45 were really forced
 - the one-row-short answers: long grids, the model likely loses a row writing them out. A check against the input size would catch it when output = input size, as in both tasks (Week 5 solver, or a verify step)
 - s2 drift as exploratory, maybe
 

@@ -90,12 +90,12 @@ Sample 1, from attempts.jsonl:
 
 ### Accepted limitations
 
-- maybe_forced is a heuristic: the server only gives total tokens (thinking + answer), so a call is flagged when the total reaches 16000 even if thinking stopped on its own before the budget. To know exact thinking tokens: count the tokens of reasoning_content with the tokenizer
+- maybe_forced is a heuristic: the server only gives total tokens (thinking + answer), so a call is flagged when the total reaches 16000 even if thinking stopped on its own before the budget. Checked on s1 by counting the tokens of reasoning_content with the tokenizer: exact, all 45 flagged were forced
 - the server's peak_memory is the highest since it started, not per call (two calls share one server)
 - SETTINGS can be changed in a terminal: detectable from the results, not prevented
 - the 233 are public since March 2025, the model may have seen them
 - task difficulty isn't calibrated, only evaluation/ has the 66% human score
-- forced stops: 45 of 60 sample 1 calls flagged maybe_forced (text 23/30, rule-first 22/30). Results are about the model with that budget, some wrong rules may just be where the thinking got cut
+- forced stops: 45 of 60 sample 1 calls forced, thinking tokens counted (text 23/30, rule-first 22/30). Results are about the model with that budget, some wrong rules may just be where the thinking got cut
 - one sample: no pass@2, no per-task check of systematic vs noisy failures
 - judging conventions (stated rule only, entailed counts, partial before wrong, extras -> got rule) set after the first transcripts were judged
 - outcome order: "wrong" only means no component at all, so partial mixes near misses with rules that fail their own train pairs
