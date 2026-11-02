@@ -108,4 +108,7 @@ Fill runs/main/judgments.csv. Conventions in notes/rule_components.md.
 
 ## 7. Score
 
-Analysis script.
+Run analysis script:
+```
+python3 analysis.py
+```
