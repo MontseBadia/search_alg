@@ -243,3 +243,15 @@ attempts.jsonl counts; the others are kept on record and never scored.
   - any later run sends a seed per call from (task, variant, sample)
 - Image variant dropped, for time. Never run, so text vs rule-first is the
   only comparison. The image prediction (15/30) stays above unscored.
+
+2 November 2026, before scoring
+
+- Tags added while tagging sample 1 blind, none of the provisional ones
+  fit these:
+  - fails own train pairs: stated rule contradicts a train pair
+  - another rule fits: a different rule fits all train pairs
+  - step left out: rule right so far, a step never stated or entailed
+  - says one thing, does another: stated rule and its own application disagree
+  - right idea dropped: thinking had the rule, the final rule doesn't
+  Score-dependent tags (right transform wrong colour, right grid wrong
+  stated rule) added after scoring.
